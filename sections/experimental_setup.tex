@@ -1,0 +1,15 @@
+\section{Experimental Setup}
+\label{sec:setup}
+\begin{itemize}
+    \item GPT-Neo and RoBERTa as baselines
+    \item The number of parameters for all models are under 10M, as that is the threshold for small language models as defined by \cite{eldan_tinystories_2023}.
+    \item The advantage of studying small language models is that they can be trained with limited computational budget.
+    \item All models are pretrained on TinyStories \cite{eldan_tinystories_2023} dataset, so they can learn grammatic knowledge without being exposed to various domain specific information.
+    \item All models' grammatical knowledge are evaluated on BLiMP, MSGS, and SuperGLUE, following the BabyLM pipeline \cite{warstadt_findings_2023}.
+    \item For baseline FFN, $d_\text{in} = 256$, $M=16$ so the baselines have around 7.5M parameters.
+    \item For MoE, $N_\text{expert}=4$ so we can test $25\%, 50\%, 75\%$ experts activation without the model becoming too large. For MoE to have the same number of parameters as baseline, it must be that $d_\text{hidden} = \frac{Md_\text{in}-N_\text{expert}}{N_\text{expert}}$
+    \item For controller FFN, in \cite{jaszczur_sparse_2021}, $d_\text{in} = 1024, N_\text{block}=64$. This is scaled down proportionally for our experiments, meaning $d_\text{in} = 256, N_\text{block}=16$. To consider different levels of sparsity $N_\text{blocks}=32,64$ are also tested. Keeping the total number of parameters the same as the baseline, $d_\text{hidden} = \frac{2MN_\text{block}-1}{2N_\text{block}+1}d_\text{in}$
+    \item For product key memory, $N_\text{head}=4,d_\text{subkey}=2d_\text{in}$. This means $N_\text{subkey}= 56$ for this model to have similar number of parameters as the baseline. The sparsity level varies by selecting top $25\%, 50\%, 75\%$ of subkeys.
+    
+\end{itemize}
+ 

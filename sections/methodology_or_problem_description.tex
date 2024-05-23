@@ -1,16 +1,10 @@
-\section{Methodology, Background, Problem Description}
-Choose one that fits your research best:
-\subsection{Methodology and/or background}
-Typically in general research articles, the second section contains a description of the research methodology, explaining what you, the researcher, is doing to answer the research question(s), and why you have chosen this method.
-For purely analytical work this is a description of the data collection or experimental setup on how to test the hypothesis, with a motivation.
-
-In any case this section includes references to necessary background information.
-For a survey paper this includes the method of how you arrived at the set of papers included in the survey.
-
-\subsection{Formal Problem Description}
-For some types of work in computer science the methodology is standard: analyze the problem (e.g., make assumptions and derive properties), present a new algorithm and its theoretical background, proving its correctness, and evaluate unproven aspects in simulation.
-Then an explanation of the methodology is often omitted, and the setup of the evaluation is part of a later section on the evaluation of the ideas.\footnote{This already shows that there is no single outline to be given for all papers.}
-In this case, explain relevant (background) concepts, theory and models in this section (with references) and relate them to your research question.
-Also this section then typically contains a more precise, formal description of the problem.
-
-Do not forget to give this section another name, for example after the problem you are solving.
+\section{Background}
+\label{sec:background}
+\begin{itemize}
+    \item Sparse transformers uses sparsified attention or feedforward
+    \item But since the feedforward layers make up the majority of a transformer's parameters, our work is restricted to sparse feedforward layers.
+    \item There are 3 sparse feedforward paradims: mixture of experts, weight mask, and memory layer.
+    \item Mixture of experts \cite{lepikhin_gshard_2020,du_glam_2022,fedus_switch_2022} replaces the feedforward layer with an ensemble of smaller feedforward networks. There is a routing network which depends the subset of the ensemble that will process the input. In our work we will consider the original MoE layer proposed by \cite{shazeer_outrageously_2017}.
+    \item The principle of weight masks is to use a sparse weight matrix in the feedforward network. This can be static, such as \cite{chandy_dyad_2023} or learned, as with \cite{jaszczur_sparse_2021}. For generality, this work considers dynamic masking from \cite{jaszczur_sparse_2021}.
+    \item The memory layer \cite{lample_large_2019,wang_--fly_2020,rae_scaling_2016} is an alternative to the feedforward layer. The input is converted to a query vector and only the values corresponding to best matching keys are activated. We will consider \cite{lample_large_2019} as the representative for this paradigm in our experiments.
+\end{itemize}

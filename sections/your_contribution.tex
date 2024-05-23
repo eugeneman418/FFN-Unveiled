@@ -1,22 +1,13 @@
-\section{Your contribution (replace this section title by something more informative)}
-In computer science typically the third section contains an exposition of the main ideas, for example the development of a theory, the analysis of the problem (some proofs), a new algorithm, and potentially some theoretical analysis of the properties of the algorithm.
+\section{Approach}
+\label{sec:approach}
+\begin{itemize}
+    \item Assume $d_\text{intermed} = Md_\text{in}$
+    \item Let $d$ denote dimension and $N$ denote quantity
+    \item For vanilla FFN, total number of parameters is $2d_\text{intermid}d_\text{in}$
+    \item For MoE, total number of parameters is $2d_\text{in}N_\text{experts}(d_\text{intermed}+1)$
+    \item For Controller FFN, total number of parameters is $2d_\text{in}(d_\text{intermed}+\frac{d_\text{intermed} + d_\text{in}}{2N_\text{blocks}})$
+    \item For product key memory, total number of parameters is $2d_\text{in}(N_\text{head}d_\text{subkey}+\frac{N_\text{subkey}^2}{2}+\frac{N_\text{head}N_\text{subkey}d_\text{subkey}}{d_\text{in}})$
+    \item $d_\text{in}$ is fixed, the other hyperparameters are set so that sparse FFNs has the same number of parameters as vanilla FFN.
+\end{itemize}
 
-Do not forget to give this section another name, for example after the method or idea you are presenting.
-
-Some more detailed suggestions for typical types of contributions in computer science are described in the following subsections.
-
-
-\subsection*{Experimental work}
-In this case, this section will mostly contain a description of the methods/algorithms you will be comparing. Although not all methods need to be described in detail (providing appropriate references are available), make sure that you reveal sufficient details to a reader not familiar with these methods to: a) obtain a high-level understanding of the method and differences between them, and b) understand your explanation of the results/conclusions.
-
-\subsection*{Improvement of an idea}
-In this case, you would need to explain in detail how the improvement works. If it is based on some observation that can be proven, this is a good place to provide that proof (e.g., of the correctness of your approach). 
-
-\subsection*{Literature survey}
-If your contribution is a literature survey, then the organization of these ``middle'' sections very much depends on the way you want to present/organize the literature you are discussing.
-First try to cluster papers that are similar in some aspect. Then think of how these clusters are related, from that you can think of a good order to discuss these clusters; this is sometimes called a bottom-up approach to writing a paper.
-
-In addition, you may try to think about the organization of the literature from a top-down perspective: try to ``take a step back'' and think about the field and what important questions/variants are and build a hierarchical categorization of the field.
-
-Make clear what your contribution is here: a new organization of the literature, identification of open problems/challenges, new parallels/generalizations, a table with pros/cons of different methods, etc.\ 
 
