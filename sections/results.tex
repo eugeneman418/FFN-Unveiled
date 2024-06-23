@@ -1,2 +1,46 @@
 \section{Results}
 \label{sec:results}
+\subsection{Pretraining}
+The evaluation loss curves during pretraining are displayed in \Cref{fig:eval-loss}. This figure shows that although no sparse models achieved lower evaluation loss than their respective baselines, at least one configuration from every sparse RoBERTa-based-models reached a similar loss as the baseline after one epoch, despite starting at a higher initial loss. Even among the GPT-Neo-based models, the MoE variant achieved a similar evaluation loss as the baseline.
+\subsection{Evaluation}
+\Cref{tab:summary_eval} demonstrates that all types of sparse feedforward layers can offer better performance for GPT-Neo and RoBERTa than FFN on (Super)GLUE tasks. As for BLiMP tasks, the PKM variant is unable to outperform the baseline for RoBERTa. The same applies to the MoE and PKM variants for GPT-Neo. On the other hand, the MoE variant performs consistently best on (Super)GLUE, while the CNT variant is the best on BLiMP. Detailed task scores for BLiMP and (Super)GLUE are reported by \Cref{tab:blimp} and \Cref{tab:superglue} in \Cref{appendix}.
+
+\Cref{fig:spar-rat-super} and \Cref{fig:spar-rat} illustrate the relationship between the proportion of activate parameters (sparsity ratio) in the feedforward layer and the model performance on (Super)GLUE and BLiMP tasks respectively. The trend lines suggest that performance tends to increase with the sparsity ratio. However, this is not always the case, as the trend is reversed for RoBERTa-based models on (Super)GLUE tasks. Furthermore, the positive correlation between the sparsity ratio and performance is only moderate as indicated by the Pearson coefficients ($0.3 < r < 0.5$).
+\subsection{Inference Speed}
+\Cref{tab:inference} reports the average inference time per batch for each feedforward layer investigated. FFN is by far the fastest. This is followed by MoE, which is around $20\%$ slower. In comparison, CNT is more than twice as slow as MoE. PKM is much slower than all other kinds of feedforward layers.
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{evaluation_loss.png}
+    \caption{Evaluation loss for GPT-Neo (top), RoBERTa (bottom), and their sparse variants during pretraining.}
+    \label{fig:eval-loss}
+\end{figure}
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{sparsity_ratio_superglue.png}
+    \caption{Sparsity ratio (percentage of active parameters in the feedforward layer) of the feedforward layers for GPT-Neo (top), RoBERTa (bottom) and their sparse variants vs. their respective overall (Super)GLUE scores.}
+    \label{fig:spar-rat-super}
+\end{figure}
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{sparsity_ratio.png}
+    \caption{Sparsity ratio (percentage of active parameters in the feedforward layer) of the feedforward layers for GPT-Neo (top), RoBERTa (bottom) and their sparse variants vs. their respective overall BLiMP scores.}
+    \label{fig:spar-rat}
+\end{figure}
+
+\begin{table}[h]
+    \caption{BLiMP and (Super)GLUE scores for GPT-Neo, RoBERTa, and their sparse variants.}
+    \label{tab:summary_eval}
+    \centering
+    \tiny
+    \input{summary_eval}
+\end{table}
+
+\begin{table}[h]
+    \caption{Batch inference speed of vanilla and sparse feedforward networks measured in milliseconds.}
+    \label{tab:inference}
+    \centering
+    \input{inference_time}
+\end{table}

@@ -1,10 +1,13 @@
-\section{Conclusions and Future Work}
+\section{Conclusions}
 \label{sec:conclusion}
-Briefly summarize the (main) research question(s).
-Provide your conclusions, the answers to the research question(s).
-Make statements.
-Highlight interesting elements, contributions.
+This paper investigates whether sparse feedforward layers in small transformers results in better predictions and faster inference than the standard feedforward network. We found that inference speed does not increase due to software and hardware limitations associated with our small language model setting. Some sparse feedforward layer, such as the controller feedforward layer, in the right configurations achieves better, performance as the standard feedforward network while using a fraction of the active parameters. We hypothesize that this is because the sparse feedforward layers more efficiently utilize their parameters by approximating larger networks. We suggest future research exploring more configurations of different sparse feedforward architectures.
 
-Discuss open issues, possible improvements, and new questions that arise from this work; formulate recommendations for further research.
 
-Ideally, this section can stand on its own: it should be readable without having read the earlier sections and accessible to anyone with a bachelor degree in Computer Science.
+% Briefly summarize the (main) research question(s).
+% Provide your conclusions, the answers to the research question(s).
+% Make statements.
+% Highlight interesting elements, contributions.
+
+% Discuss open issues, possible improvements, and new questions that arise from this work; formulate recommendations for further research.
+
+% Ideally, this section can stand on its own: it should be readable without having read the earlier sections and accessible to anyone with a bachelor degree in Computer Science.

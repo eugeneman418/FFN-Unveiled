@@ -14,10 +14,15 @@
 \usepackage[small]{caption}
 \usepackage{graphicx}
 \usepackage{amsmath}
+\usepackage{array}
 \usepackage{booktabs}
-\urlstyle{same}
+\usepackage{cleveref}
 
 \usepackage{todonotes}
+    
+\usepackage[square,numbers]{natbib}
+\urlstyle{same}
+
 
 \begin{document}
 
@@ -35,18 +40,19 @@
 
 \input{sections/results}
 
-\input{sections/responsible_research}
-
 \input{sections/discussion}
 
 \input{sections/conclusion_and_future_work}
 
+\input{sections/responsible_research}
+
+\bibliographystyle{plainnat}
+\bibliography{sections/references}
+
+% \newpage
+% \cleardoublepage
+
 \input{sections/appendix}
-
-\bibliographystyle{plain}
-\bibliography{references}
-
-
 
 \end{document}
 

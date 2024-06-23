@@ -1,13 +1,100 @@
 \section{Approach}
 \label{sec:approach}
-\begin{itemize}
-    \item Assume $d_\text{intermed} = Md_\text{in}$
-    \item Let $d$ denote dimension and $N$ denote quantity
-    \item For vanilla FFN, total number of parameters is $2d_\text{intermid}d_\text{in}$
-    \item For MoE, total number of parameters is $2d_\text{in}N_\text{experts}(d_\text{intermed}+1)$
-    \item For Controller FFN, total number of parameters is $2d_\text{in}(d_\text{intermed}+\frac{d_\text{intermed} + d_\text{in}}{2N_\text{blocks}})$
-    \item For product key memory, total number of parameters is $2d_\text{in}(N_\text{head}d_\text{subkey}+\frac{N_\text{subkey}^2}{2}+\frac{N_\text{head}N_\text{subkey}d_\text{subkey}}{d_\text{in}})$
-    \item $d_\text{in}$ is fixed, the other hyperparameters are set so that sparse FFNs has the same number of parameters as vanilla FFN.
-\end{itemize}
+This section describes the feedforward layer along with its main sparse variants and derives their sizes. This is followed by new insights into a unified view of sparse feedforward layers.
+
+\subsection{Feedforward Network (FFN)}
+In baseline transformer architectures, the feedforward layer is simply a feedforward network (FFN), defined as:
+\begin{equation}
+    \label{eq:ffn}
+    \text{FFN}(x)=\sigma(xW_1+b_1)W_2+b_2
+\end{equation}
+where $\sigma$ is the activation function, typically ReLU. 
 
 
+Suppose the dimensionality of the input token embedding is $d_\text{in}$ and that the intermediate size is $d_m=Md_\text{in}$, then the total number of parameters is: 
+\begin{equation}
+ T_\text{FFN} = 2Md_\text{in}^2 + (M+1)d_\text{in}  
+\end{equation}
+Note that because all models share the same tokenizer, $d_\text{in}$ is fixed.
+
+\subsubsection{Sparsely Gated Mixture of Experts (MoE)}
+Sparely gated mixture of experts (MoE), originally proposed in \cite{shazeer_outrageously_2017} for recurrent models was adapted into transformers such as GLaM \cite{du_glam_2022}, GShard \cite{lepikhin_gshard_2020}, Switch Transformer \cite{fedus_switch_2022}, and Mixtral of Experts \cite{jiang_mixtral_2024}. MoE consists of an ensemble of small feedforward networks called experts $\text{FFN}_1, \text{FFN}_2,...,\text{FFN}_n$ and a routing function $G$, such that the output is a linear combination of expert outputs:
+\begin{equation}
+    \text{MoE}(x) = \sum_{i=1}^n G(x)_i \text{FFN}_i(x)
+\end{equation}
+Sparsity is created when $G(x)$ is zero for all but the top $k$ experts (typically $k=2$). In \cite{shazeer_outrageously_2017}, $G(x)$ is defined as:
+\begin{equation}
+    \label{eq:routing}
+    G(x) = \text{Softmax}(\text{Top}_k(xW_g+Z\odot \text{Softplus}(xW_\epsilon)))
+\end{equation}
+where $Z$ is a standard normal vector.
+
+Assuming an expert ensemble of size $N_\text{experts}$, where each expert has intermediate size $M$, then the total number of parameters across the expert ensemble is $N_\text{experts}d_\text{in}(2Md_\text{in} + M+1)$. In addition, the routing function requires $2N_\text{experts}d_\text{in}$ parameters. The total number of parameters in MoE is thus: 
+\begin{equation}
+    T_\text{MoE} = N_\text{experts}d_\text{in}(2Md_\text{in} + M + 3)
+\end{equation}
+The number of active parameters for top $k$ expert activation is:
+\begin{equation}
+    T_\text{MoE}^\text{active} = k(2d_md_\text{in} + d_m + d_\text{in}) + 2N_\text{experts}d_\text{in}
+\end{equation}
+
+\subsubsection{Controller Feedforward (CNT)}
+The controller feedforward layer (CNT) implements sparsity by applying a learned mask (called the controller) on the weight matrix \cite{jaszczur_sparse_2021,gorbett_sparse_2023,thangarasa_mediswift_2024}. Using the Scaling Transformer \cite{jaszczur_sparse_2021} as a representative, this feedforward layer can be defined as:
+\begin{equation}
+    \label{eq:cnt}
+    \text{CNT}(x) = \sigma(xW_1+b_1) \odot \text{Controller}(x) W_2 +b_2
+\end{equation}
+In this case, the controller masks out all but $k$ entries of the activation vector, effectively activating only $k$ rows of $W_2$.
+
+In the sparse feedforward model from \cite{jaszczur_sparse_2021}, the controller is implemented as a linear map followed by argmax activations over $N_\text{blocks}$ blocks. The linear map is factorized into the product of two rank $\frac{d_\text{in}}{N_\text{blocks}}$ matrices. The total number of CNT parameters is: \begin{equation}
+    T_\text{CNT} = 2(M+\frac{M + 1}{2N_\text{blocks}})d_\text{in}^2
+\end{equation}
+The number of active parameters is: \begin{equation}
+    T_\text{CNT}^\text{active} =  2N_\text{blocks}d_\text{in} + N_\text{blocks} + d_\text{in} + \frac{d_\text{in}^2}{N_\text{blocks}} + \frac{d_md_\text{in}}{N_\text{blocks}}
+\end{equation}
+
+
+\subsubsection{Product Key Memory (PKM)}
+The product key memory layer (PKM) \cite{lample_large_2019,wang_--fly_2020,rae_scaling_2016} is an alternative to the vanilla feedforward network. The weight matrices are replaced by learned query matrix $Q$, key matrix $K$, and value matrix $V$. Under this architecture, the input is first converted to the query vector:
+\begin{equation}
+    q(x) = xQ
+\end{equation}
+Only the values corresponding to best matching keys under dot product similarity are activated. The output is given by:
+\begin{equation}
+    \text{PKM}(x) = \text{Softmax}(\text{Top}_k(q(x)K^T))V
+\end{equation}
+Each row in $K$ is a key corresponding to a row in the value matrix $V$. The similarity between the query $q(x)$ and a key is measured by their dot product. The output is a linear combination of the top $k$ values weighed by the softmax of the query-key similarity.
+
+In product key memory, the query matrix has shape $d_\text{in}\times d_q$. The key table $K$ is a Cartesian product of two subkey tables, each of shape $N_\text{subkeys}\times d_\text{subkey}$, where $2d_\text{subkey}=d_q$. The value table, therefore, has shape $N_\text{subkeys}^2\times d_\text{in}$. Instead of having a single query matrix and a pair of subkey tables, \cite{lample_large_2019} proposes a multi-head approach, with $N_\text{heads}$ query matrices and pairs of subkey tables, but a shared value table. Under this approach, the total number of parameters is: \begin{equation}
+    T_\text{PKM} = 2d_\text{in}d_\text{subkey}(N_\text{heads}+\frac{N_\text{subkeys}^2}{2d_\text{subkey}}+\frac{N_\text{heads}N_\text{subkeys}}{d_\text{in}})
+\end{equation}
+With multiple heads, the number of active parameters depends on the input (as multiple heads can select the same value), but the lower bound given top $k$ key activation is: \begin{equation}
+    T_\text{PKM}^\text{active} \ge N_\text{heads}(d_qd_\text{in} + N_\text{subkeys}d_q )+kd_\text{in}
+\end{equation}
+
+
+
+\subsection{A Unified View of Sparse Feedforward Layers}
+\label{subsec:cnt-moe}
+We demonstrate that CNT is the same as MoE with best expert activation and weight sharing. This transitively means that FFN, MoE, CNT, and PKM can all be viewed as neural memories. A unified view of sparse feedforward layers simplifies theoretical analysis and allows a generalized explainability technique to be developed for all sparse feedforward layers.
+
+Previous works proved that FFN, MoE, and PKM can be interpreted as neural memories \cite{liu_towards_2023}. A neural memory with $n$ memory cells is a function of the form: \begin{equation}
+    y = \sum_{i=0}^{n-1} \alpha_i(x)v_i
+\end{equation}
+The output of neural memory is a linear combination of value vectors $v_0,...,v_{n-1}$ weighed by the input-dependent memory coefficients $\alpha_0,...,\alpha_{n-1}$.
+
+PKM can be trivially expressed in this form. The value vectors are the rows of the value matrix $V$ and the memory coefficients are the dot product between the query vector and the keys.
+
+As for MoE, assume it has routing function $G$ and $N_e$ experts, each defined as a FFN with intermediate size $d_m$ and no biases, $\text{FFN}_i(x) = \sigma (xU_i)V_i$. It can be expressed in the form of neural memory with $N_ed_m$ memory cells as: 
+\begin{equation}
+    \begin{split}
+        \text{MoE}(x) &= \sum_{l=0}^{N_ed_m-1} \alpha_l(x) V_{\lfloor \frac l {d_m} \rfloor}[l \bmod d_m, :] \\
+        \alpha_l(x) &= G(x)_{\lfloor \frac l {d_m} \rfloor} \sigma(xU_{\lfloor \frac l {d_m} \rfloor})[l \bmod d_m]
+    \end{split}
+\end{equation}
+
+The mixture of experts interpretation of CNT is based on \Cref{eq:cnt}. Assuming the controller is in $N_\text{blocks}$ blocks and has intermediate size $d_m$, an equivalent MoE can be constructed. This MoE has $d_m \choose N_\text{blocks}$ experts, each with intermediate size $N_\text{blocks}$. The controller can be seen as a routing function that only selects the top expert. The experts are the combinations of every $N_\text{blocks}$ row in the weight matrices. To be precise, every size $N_\text{blocks}$ subset, $s$, of $\{0,...,d_m-1\}$ defines an expert:
+\begin{equation}
+    \text{FFN}_s(x) = \sigma(xW[:,s]+b_1[s])W_2[s,:]+b_2
+\end{equation}
+When viewed as a neural memory, the CNT has ${d_m \choose N_\text{blocks}} N_\text{blocks}$ memory cells. However, due to weight sharing, there are at most $d_m$ unique value vectors.

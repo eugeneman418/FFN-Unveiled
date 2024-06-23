@@ -1,10 +1,41 @@
 \section{Background}
 \label{sec:background}
-\begin{itemize}
-    \item Sparse transformers uses sparsified attention or feedforward
-    \item But since the feedforward layers make up the majority of a transformer's parameters, our work is restricted to sparse feedforward layers.
-    \item There are 3 sparse feedforward paradims: mixture of experts, weight mask, and memory layer.
-    \item Mixture of experts \cite{lepikhin_gshard_2020,du_glam_2022,fedus_switch_2022} replaces the feedforward layer with an ensemble of smaller feedforward networks. There is a routing network which depends the subset of the ensemble that will process the input. In our work we will consider the original MoE layer proposed by \cite{shazeer_outrageously_2017}.
-    \item The principle of weight masks is to use a sparse weight matrix in the feedforward network. This can be static, such as \cite{chandy_dyad_2023} or learned, as with \cite{jaszczur_sparse_2021}. For generality, this work considers dynamic masking from \cite{jaszczur_sparse_2021}.
-    \item The memory layer \cite{lample_large_2019,wang_--fly_2020,rae_scaling_2016} is an alternative to the feedforward layer. The input is converted to a query vector and only the values corresponding to best matching keys are activated. We will consider \cite{lample_large_2019} as the representative for this paradigm in our experiments.
-\end{itemize}
+This section elaborates on the transformer model and discusses related works on efficient transformers.
+\subsection{Transformer}
+Transformers \cite{vaswani_attention_2017} are composed of blocks of attention layers and feedforward layers. The attention layer represents a token, for instance, a word, a subword, or a character, in terms of its relation with other tokens in the input sequence. The feedforward layer applies a non-linear transformation to the features learned by the previous attention layer. The original transformer \cite{vaswani_attention_2017} consists of an encoder and a decoder. For missing token prediction tasks, which are the focus of this paper, encoder or decoder alone suffices. This paper investigates two baseline architectures, GPT-2 \cite{radford_language_nodate} and BERT \cite{devlin_bert_2019}. 
+
+The transformer output's interpretation depends on the pretraining objective. GPT-2, when pretrained under a causal language modelling objective, outputs a sequence of logit arrays, one for each input token. Each logit array represents the predicted probability distribution of the next token given the previous tokens. For BERT, two objectives were originally proposed: masked language modelling and next sentence prediction. This paper is only concerned with the former for the ease of assessing the model's language understanding. This means the model is given an input sequence containing masked tokens and is pretrained to uncover those masked tokens.
+\subsection{Related Works}
+There exist various paradigms for efficient transformers \cite{tay_efficient_2022}. The majority focuses on reducing the attention layer's quadratic space and time complexities. However, since feedforward layers make up two-thirds of the total parameters in a transformer \cite{pires_one_2023}, this paper focuses on efficient feedforward techniques, of which there are two main approaches: low-rankness and sparsity.
+
+Low-rank techniques factorize the weight matrix $W_{m\times n}$ in the feedforward layer as a product of lower-rank matrices $U_{m\times l}\times V_{l\times n}$. This leads to computational speedups if $l <\frac{mn}{m+n}$ \cite{kamalakara_exploring_2022}. In the context of transformers, \cite{winata_lightweight_2020} demonstrated that with the same number of model parameters, low-rank feedforward layers perform favourably to their full-rank counterparts.
+
+Sparse techniques mask the weight matrices so only a fraction of their entries are used in computations. Unlike low-rank techniques, it is currently uncertain if sparse models can outperform dense models of the same size.
+
+
+
+%controller basically decomposes the latent space into ensemble of low dim latent spaces (masking activation vector = choosing a latent space from ensemble)
+%Controller MoE, controller is like MoE but with combintoral number of experts?
+
+% \begin{itemize}
+%     \item =
+%     \item Sparse transformers uses sparsified attention or feedforward
+%     \item But since the feedforward layers make up the majority of a transformer's parameters, our work is restricted to sparse feedforward layers.
+%     \item There are 3 sparse feedforward paradims: mixture of experts, weight mask, and memory layer.
+%     \item Mixture of experts \cite{lepikhin_gshard_2020,du_glam_2022,fedus_switch_2022} replaces the feedforward layer with an ensemble of smaller feedforward networks. There is a routing network which depends the subset of the ensemble that will process the input. In our work we will consider the original MoE layer proposed by \cite{shazeer_outrageously_2017}.
+%     \item The principle of weight masks is to use a sparse weight matrix in the feedforward network. This can be static, such as \cite{chandy_dyad_2023} or learned, as with \cite{jaszczur_sparse_2021}. For generality, this work considers dynamic masking from \cite{jaszczur_sparse_2021}.
+%     \item We will consider \cite{lample_large_2019} as the representative for this paradigm in our experiments.
+% \end{itemize}
+
+% \begin{itemize}
+%     \item Sparse transformers are transformer models that only activate a portion of their parameters when processing an input.
+%     \item Sparse transformers such as GLaM, Switch Transformer, and Scaling Transformer have been shown to outperform dense models such as GPT-3 \cite{du_glam_2022}, T5 \cite{fedus_switch_2022}, and BIGBIRD-RoBERTa \cite{jaszczur_sparse_2021}.
+%     \item But the architectural reason for the sparse transformer's success is uncertain.
+%     \item Sparsity allows the model more parameters without extra computational costs. More parameters bring greater learning capacities.
+%     \item But when such models are compared to much smaller baselines, it becomes unclear whether the improved performance is inherently related to sparsity, in the sense of more efficient utilization of model parameters, or simply the result of a bigger model.
+%     \item Works on network pruning demonstrated that it is indeed possible to achieve better \cite{balderas_optimizing_2024} or at least comparable performance \cite{lecun_optimal_1989} to the original model with a sparsified network.
+%     \item More theoretical backings of sparse feedforward networks \cite{csordas_approximating_2023,baykal_theoretical_2022}
+%     \item Our work contributions to the question of sparsity's influence in learning capacity by comparing sparse transformers against dense transformers of similar sizes.
+%     \item \textbf{TODO: findings and implications}
+
+% \end{itemize}
