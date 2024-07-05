@@ -7,7 +7,7 @@ This section reports the research questions answered by the experiments, the dat
 \subsection{Research Questions}
 The experiments address the following questions:
 \begin{enumerate}
-    \item \textit{Can sparse feedforward layers offer better model performance than a dense feedforward layer of the same size?} We compare the performance of vanilla GPT-Neo and RoBERTa against their sparse variants augmented with MoE, CNT, and PKM as feedforward layers while keeping the number of parameters as close as possible.
+    \item \textit{Can sparse feedforward layers offer better language understanding than a dense feedforward layer of the same size?} We compare the performance of vanilla GPT-Neo and RoBERTa against their sparse variants augmented with MoE, CNT, and PKM as feedforward layers while keeping the number of parameters as close as possible.
     \item \textit{Is there a direct relationship between the degree of sparsity in the feedforward layer and the model performance?} For each sparse variant, we evaluate several configurations corresponding to different levels of sparsity.
     \item \textit{How does the type of sparse feedforward layer affect inference speed?} We measure the forward pass time for MoE, CNT, and PKM.
 \end{enumerate}
@@ -17,7 +17,7 @@ All models investigated in this paper are pretrained on the TinyStories dataset.
 % In addition, it has been demonstrated that small models, having fewer than $35$ million parameters, can outperform variants of GPT-2 (each with more than $125$ million parameters) when pretrained on this dataset, even with less training budget.
 
 \subsection{BabyLM Pipeline}
-BablyLM is a challenge on sample-efficient pretraining of small language models \cite{warstadt_call_2023}. All models investigated in this paper are evaluated on performance metrics from BabyLM\footnote{The official evaluation pipeline can be found at: https://github.com/babylm/evaluation-pipeline-2023}, namely BLiMP and (Super)GLUE. We used a modified implementation of the BabyLM evaluation pipeline to accommodate the custom feedforward layers.
+A model's language understanding is measured in this paper by the performance metrics from BabyLM\footnote{The official evaluation pipeline can be found at: https://github.com/babylm/evaluation-pipeline-2023}, namely BLiMP and (Super)GLUE. BablyLM is a challenge on sample-efficient pretraining of small language models \cite{warstadt_call_2023}. We used a modified implementation of the BabyLM evaluation pipeline to accommodate the custom feedforward layers.
 
 BLiMP originally consisted of 67000 pairs of sentences, where the sentences in each pair are minimally different, but one contains one of twelve types of grammar error \cite{warstadt_blimp_2023}. For BabyLM, this dataset set was extended with supplement tasks, covering a wider range of grammar errors. Performance is measured as classification accuracy, where a model classifies a pair correctly if it assigns the grammatically correct sentence a higher likelihood.
 
@@ -33,7 +33,7 @@ For CNT, we experiment with block counts $N_\text{blocks}=64,32,16$, and associa
 
 As for PKM, all models have $N_\text{head}=4$ heads, $N_\text{subkeys}=56$ subkeys, and query dimensionality $d_q=1024$. Models with top $k=14,28,42$ (approximately top $25\%,50\%,75\%$) key activation are investigated. \Cref{tab:mode-size} summarizes the model size. 
 
-We pretrain all models for $2$ epochs using the AdamW optimizer with an initial learning rate of $0.0005$ and linear learning rate decay. The batch size and the gradient accumulation steps are set to $16$. All petrainings are accelerated by a NVIDIA A100 GPU.
+We pretrain all models for $2$ epochs using the AdamW optimizer with an initial learning rate of $0.0005$ and linear learning rate decay. The batch size and the gradient accumulation steps are set to $16$. All pretraining is accelerated by an NVIDIA A100 GPU.
 
 To measure the average inference time of each type of feedforward layer, we measure the inference time on a batch of $16$ input sequences, each of length $256$ and embedding dimensionality of $256$. This is measured across $1000$ batches. Prior to the experiment, the GPU is warmed up for $100$ batches.
 
@@ -41,7 +41,7 @@ To measure the average inference time of each type of feedforward layer, we meas
 \begin{table}[h]
 
 \centering
-\caption{Models involved in our experiments and their number of learnable parameters and the lower bound sparsity ratio (ratio between the number of active and total parameters) in their feedforward layers.}
+\caption{Models involved in our experiments and their number of learnable parameters and the lower bound sparsity ratio (ratio between the number of active and total parameters) in their feedforward layers. While these models have various sparsity ratios, their total parameter count is approximately the same.}
 \label{tab:mode-size}
 \tiny
 \begin{tabular}{lcc}
